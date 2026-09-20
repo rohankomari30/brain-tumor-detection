@@ -1,0 +1,5 @@
+Class,Sensitivity,Specificity,ROC-AUC
+glioma,0.790,0.963,0.935
+meningioma,0.743,0.972,0.974
+notumor,1.000,0.927,0.997
+pituitary,0.990,0.979,0.999

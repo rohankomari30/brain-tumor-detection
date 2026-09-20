@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.vscode/
+data/
+*.h5
+outputs/*.png
+outputs/*.txt
+.DS_Store

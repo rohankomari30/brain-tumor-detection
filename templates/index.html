@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroScan &mdash; Brain Tumor Detection</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">NeuroScan</span>
+    </div>
+    <nav class="site-nav">
+      <a href="/" class="active">Analyze Scan</a>
+      <a href="/performance">Model Performance</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Upload an MRI scan.<br />See what the model finds.</h1>
+      <p class="hero-sub">
+        A convolutional network trained on labeled brain MRI scans, classifying
+        each image as glioma, meningioma, pituitary tumor, or no tumor detected.
+      </p>
+    </section>
+
+    <section class="workspace">
+
+      <div class="scan-panel">
+        <div id="dropzone" class="dropzone">
+          <div class="scan-frame">
+            <span class="bracket tl"></span>
+            <span class="bracket tr"></span>
+            <span class="bracket bl"></span>
+            <span class="bracket br"></span>
+            <img id="preview-img" class="preview-img" alt="" />
+            <div id="dropzone-empty" class="dropzone-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <p>Drop an MRI image here, or click to browse</p>
+              <p class="dropzone-hint">PNG or JPG</p>
+            </div>
+          </div>
+          <input type="file" id="file-input" accept=".png,.jpg,.jpeg" hidden />
+        </div>
+
+        <button id="analyze-btn" class="analyze-btn" disabled>Analyze scan</button>
+        <p id="status-msg" class="status-msg"></p>
+      </div>
+
+      <div class="results-panel">
+        <div id="results-empty" class="results-empty">
+          <p>Results will appear here once you analyze a scan.</p>
+        </div>
+
+        <div id="results-content" class="results-content hidden">
+          <div id="reliability-banner" class="reliability-banner hidden">
+            <span class="reliability-icon">&#9888;</span>
+            <span id="reliability-text"></span>
+          </div>
+
+          <div class="verdict">
+            <span id="verdict-dot" class="verdict-dot"></span>
+            <div>
+              <p class="verdict-label">Predicted class</p>
+              <p id="verdict-class" class="verdict-class">&mdash;</p>
+            </div>
+            <p id="verdict-confidence" class="verdict-confidence">&mdash;</p>
+          </div>
+
+          <p id="confidence-level-badge" class="confidence-level-badge"></p>
+
+          <p id="agreement-note" class="agreement-note"></p>
+
+          <div class="probabilities">
+            <p class="probabilities-title">Class probabilities (ensemble of 2 models)</p>
+            <div id="prob-bars" class="prob-bars"></div>
+          </div>
+
+          <div id="gradcam-section" class="gradcam-section hidden">
+            <p class="gradcam-title">Explainability &mdash; two independent methods</p>
+            <div class="gradcam-dual gradcam-triple">
+              <div class="gradcam-dual-item">
+                <img id="gradcam-img-baseline" class="gradcam-img" alt="Grad-CAM heatmap from the baseline CNN" />
+                <p class="gradcam-model-label">Grad-CAM &mdash; Baseline CNN</p>
+              </div>
+              <div class="gradcam-dual-item">
+                <img id="occlusion-img-baseline" class="gradcam-img" alt="Occlusion sensitivity map from the baseline CNN" />
+                <p class="gradcam-model-label">Occlusion Sensitivity &mdash; Baseline CNN</p>
+              </div>
+              <div class="gradcam-dual-item">
+                <img id="gradcam-img-transfer" class="gradcam-img" alt="Grad-CAM heatmap from the transfer learning model" />
+                <p class="gradcam-model-label">Grad-CAM &mdash; Transfer Learning</p>
+              </div>
+            </div>
+            <p class="gradcam-caption">
+              Grad-CAM uses gradients; occlusion sensitivity systematically hides
+              patches of the image and measures the confidence drop &mdash; a
+              completely independent method. When both agree on the same region
+              for the baseline model, that's stronger evidence the model's
+              attention is genuine rather than a quirk of one technique. Neither
+              heatmap is a medical indication of tumor location or size.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <p class="disclaimer">
+      Built for academic demonstration only &mdash; not a diagnostic tool.
+      Predictions come from a model trained on a limited public dataset and
+      should never inform real medical decisions.
+    </p>
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroScan &mdash; Model Performance</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">NeuroScan</span>
+    </div>
+    <nav class="site-nav">
+      <a href="/">Analyze Scan</a>
+      <a href="/performance" class="active">Model Performance</a>
+    </nav>
+  </header>
+
+  <main class="performance-main">
+    <section class="hero">
+      <h1>Model Performance</h1>
+      <p class="hero-sub">
+        Five modeling approaches were trained and evaluated on the same held-out
+        test set (1,600 images). Results below are real evaluation output, not
+        illustrative figures.
+      </p>
+    </section>
+
+    <table class="perf-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Test Accuracy</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in models %}
+        <tr class="{{ 'final-row' if 'Ensemble' in m.name else '' }}">
+          <td>{{ m.name }}</td>
+          <td class="perf-acc">{{ m.accuracy }}</td>
+          <td class="perf-notes">{{ m.notes }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if images %}
+    <h2 class="section-title">Evaluation Plots</h2>
+    <div class="plots-grid">
+      {% for img in images %}
+      <div class="plot-card">
+        <img src="{{ url_for('serve_output', filename=img.filename) }}" alt="{{ img.label }}" />
+        <p class="plot-label">{{ img.label }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-plots-msg">
+      No evaluation plots found yet in your outputs/ folder. Run
+      evaluate_ensemble.py and evaluate_full_metrics.py (and your training
+      scripts) to generate them &mdash; they'll appear here automatically.
+    </p>
+    {% endif %}
+
+    <p class="disclaimer">
+      Built for academic demonstration only &mdash; not a diagnostic tool.
+    </p>
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
