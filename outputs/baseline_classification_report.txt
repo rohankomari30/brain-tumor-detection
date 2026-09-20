@@ -1,0 +1,13 @@
+Baseline CNN Test Accuracy: 87.25%
+Baseline CNN Test Loss: 0.8061
+
+              precision    recall  f1-score   support
+
+      glioma       0.93      0.74      0.82       400
+  meningioma       0.86      0.77      0.81       400
+     notumor       0.79      1.00      0.88       400
+   pituitary       0.95      0.97      0.96       400
+
+    accuracy                           0.87      1600
+   macro avg       0.88      0.87      0.87      1600
+weighted avg       0.88      0.87      0.87      1600

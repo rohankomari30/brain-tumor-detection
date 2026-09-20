@@ -1,0 +1,13 @@
+Baseline CNN v2 (CLAHE) Test Accuracy: 77.38%
+Test Loss: 1.2271
+
+              precision    recall  f1-score   support
+
+      glioma       1.00      0.52      0.68       400
+  meningioma       0.70      0.59      0.64       400
+     notumor       0.75      0.99      0.86       400
+   pituitary       0.75      0.99      0.86       400
+
+    accuracy                           0.77      1600
+   macro avg       0.80      0.77      0.76      1600
+weighted avg       0.80      0.77      0.76      1600

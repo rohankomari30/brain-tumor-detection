@@ -2,8 +2,18 @@ venv/
 __pycache__/
 *.pyc
 .vscode/
-data/
-*.h5
-outputs/*.png
-outputs/*.txt
 .DS_Store
+
+# The full training dataset - not needed to run the deployed app
+data/
+
+# Training checkpoint files - only the two files the app actually loads
+# (baseline_cnn_model.h5, transfer_model_full_finetuned.h5) need to be
+# pushed; these intermediate checkpoints don't.
+best_model.h5
+best_model_finetuned.h5
+best_full_finetuned.h5
+best_baseline_cnn.h5
+best_baseline_cnn_v2.h5
+brain_tumor_model.h5
+baseline_cnn_v2_model.h5
