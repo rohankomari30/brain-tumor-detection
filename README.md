@@ -1,146 +1,120 @@
-# Brain Tumor Detection — VS Code Project
+# NeuroScan: Explainable and Uncertainty-Aware Brain Tumor MRI Classification
 
-Everything for the mini project in one folder: training script, trained
-model output, and a Flask + HTML/CSS/JS web app to demo it.
+B.Tech 4-1 Mini Project, Department of Artificial Intelligence, Anurag University.
+Team: K. Venkata Rohan (23EG106B30), A. Mohan Sujith (23EG106B04), M. Mahathi (23EG106B41).
+
+The project classifies a brain MRI slice into **glioma, meningioma, pituitary tumor or no tumor**.
+Five training strategies are compared on one test set, and the best system (an ensemble) is
+packaged as a Flask web application with Grad-CAM and occlusion-sensitivity explanations and a
+reliability check (model agreement, confidence threshold, input gate).
+
+> This is an academic prototype. It has not been clinically validated and must not be used for diagnosis.
+
+## Results (1,600-image test set)
+
+| Experiment | Model | Test accuracy |
+|---|---|---|
+| 1 | MobileNetV2, frozen base | 81.12% |
+| 2 | CNN trained from scratch | 87.25% |
+| 3 | MobileNetV2, fully fine-tuned | 83.75% |
+| 4 | CNN + CLAHE + batch normalization | 77.38% |
+| 5 | Ensemble of Experiments 2 and 3 | **88.06%** (macro ROC-AUC 0.976) |
+
+On an independent dataset (BDNeuro-MRI, 889 images, no retraining) the ensemble scored 80.99%.
+
+## Folder layout
 
 ```
-brain_tumor_project/
-├── README.md
-├── requirements.txt
-├── train.py                # trains the model, run this first
-├── app.py                  # Flask backend, run this after training
-├── templates/
-│   └── index.html
-├── static/
-│   ├── style.css
-│   └── script.js
-├── data/                   # put the dataset here (see step 3 below)
-└── outputs/                # training saves plots + report here
+app.py                         Flask backend (two models, Grad-CAM, occlusion, reliability check)
+train.py                       Experiment 1: MobileNetV2, frozen base
+train_baseline_cnn.py          Experiment 2: CNN from scratch
+full_fine_tune.py              Experiment 3: MobileNetV2, all layers fine-tuned
+train_baseline_cnn_v2.py       Experiment 4: CNN + CLAHE + batch norm
+evaluate_ensemble.py           Experiment 5: ensemble evaluation
+evaluate_full_metrics.py       ROC-AUC, PR curves, sensitivity/specificity
+evaluate_cross_dataset.py      Independent-dataset evaluation (one model)
+evaluate_cross_dataset_all.py  Independent-dataset evaluation (all models and the ensemble)
+export_weights.py              Saves weights-only files for Colab
+templates/, static/            Web interface
+outputs/                       Curves, confusion matrices and reports saved by the scripts
+Dockerfile, requirements.txt   Packaging
 ```
 
-## 1. Open the project in VS Code
+The trained models (`*.h5`) are in this repository. The application needs
+`baseline_cnn_model.h5` and `transfer_model_full_finetuned.h5` next to `app.py`.
 
-- File → Open Folder → select `brain_tumor_project`
-- Install the **Python extension** (ms-python.python) from the Extensions
-  panel if you don't have it already — VS Code will usually prompt you to
-  install it automatically when it sees `.py` files.
+## 1. Set up
 
-## 2. Set up a virtual environment
-
-Open a terminal in VS Code (`` Ctrl+` ``, or Terminal → New Terminal) and run:
-
-**Windows:**
 ```bash
 python -m venv venv
-venv\Scripts\activate
-```
-
-**Mac/Linux:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-Then install everything:
-```bash
+venv\Scripts\activate          # Windows
+source venv/bin/activate       # Mac / Linux
 pip install -r requirements.txt
 ```
 
-**Select the interpreter:** press `Ctrl+Shift+P` → "Python: Select Interpreter"
-→ choose the one inside `venv` (it'll be listed as recommended). This makes
-sure VS Code runs your code with the right packages installed.
+Versions used by the team (from `pip freeze`): TensorFlow 2.21.0, Keras 3.15.1, NumPy 2.5.3,
+scikit-learn 1.9.1, Matplotlib 3.11.2, seaborn 0.13.2, opencv-python 5.0.0.93, Flask 3.1.3, Pillow 12.3.0.
+`requirements.txt` does not pin versions, so a fresh install may pick newer releases.
 
-## 3. Get the dataset
+## 2. Get the dataset
 
-Kaggle: **"Brain Tumor Classification (MRI)"** by Sartaj Bhuvaji.
+Main dataset: **Brain Tumor MRI Dataset** by Masoud Nickparvar (Kaggle):
+https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset
+Check the licence shown on that page before reuse.
 
-**Option A — Kaggle API:**
-```bash
-pip install kaggle
+Download it, unzip it, and place the `Training` and `Testing` folders inside a `data` folder:
+
 ```
-Get an API token from kaggle.com → Account → Create New API Token (downloads
-`kaggle.json`). Put it at:
-- Windows: `C:\Users\<you>\.kaggle\kaggle.json`
-- Mac/Linux: `~/.kaggle/kaggle.json`
-
-Then:
-```bash
-kaggle datasets download -d sartajbhuvaji/brain-tumor-classification-mri
-```
-Unzip it so you end up with `data/Training/` and `data/Testing/` inside this
-project folder.
-
-**Option B — Manual:** download the zip from the Kaggle page yourself and
-extract it into `data/`, same target structure as above.
-
-## 4. Train the model
-
-In the VS Code terminal (with `venv` active):
-```bash
-python train.py
+data/
+  Training/   glioma, meningioma, notumor, pituitary
+  Testing/    glioma, meningioma, notumor, pituitary
 ```
 
-This trains a MobileNetV2 transfer-learning model, prints progress per
-epoch, and when done:
-- Saves `brain_tumor_model.h5` in the project root (right where `app.py`
-  expects it — no moving files around)
-- Saves accuracy/loss curves, a confusion matrix, and a classification
-  report into `outputs/` — these are your report figures
+The class folders are read in alphabetical order. This order must match `CLASS_NAMES` in `app.py`.
 
-Optional flags:
+The independent test set is BDNeuro-MRI (Mendeley Data):
+https://data.mendeley.com/datasets/zwr4ntf94j
+
+## 3. Reproduce the experiments
+
+No random seed is fixed, so results will be close to, but not identical with, the numbers above.
+Each run takes from about ten minutes to over an hour on a CPU.
+
 ```bash
-python train.py --epochs 20          # train longer
-python train.py --data_dir data      # if your dataset is elsewhere
+python train.py                      # Exp. 1  -> brain_tumor_model.h5
+python train_baseline_cnn.py         # Exp. 2  -> baseline_cnn_model.h5
+python full_fine_tune.py             # Exp. 3  -> transfer_model_full_finetuned.h5 (needs Exp. 1)
+python train_baseline_cnn_v2.py      # Exp. 4  -> baseline_cnn_v2_model.h5
+python evaluate_ensemble.py          # Exp. 5  ensemble accuracy, report, confusion matrix
+python evaluate_full_metrics.py      # ROC-AUC, PR curves, sensitivity/specificity
+python evaluate_cross_dataset_all.py --data_dir path/to/BDNeuro-MRI/test
 ```
 
-You can also just click the **Run** ▷ button at the top-right of `train.py`
-in VS Code instead of typing the command.
+Common options: `--data_dir`, `--epochs`, `--batch_size`, `--output_dir` (default `outputs`).
+Training curves, confusion matrices and classification reports are saved in `outputs/`.
 
-**No GPU locally?** It'll still work, just slower (maybe 20–40 min instead
-of a few minutes) since MobileNetV2's base is frozen and you're only
-training a small head. If that's too slow for your deadline, train in
-Google Colab instead (free GPU) and copy the resulting `brain_tumor_model.h5`
-into this folder afterwards — everything else works the same either way.
-
-## 5. Run the web app
+## 4. Run the web application
 
 ```bash
 python app.py
 ```
-Open **http://localhost:5000** in your browser. Upload an MRI image, click
-"Analyze scan", and you'll see the predicted class, confidence, and a
-probability breakdown across all four classes.
 
-## Debugging in VS Code (optional)
+Open http://localhost:5000, upload an MRI slice and press Analyze. The page shows the predicted
+class, the ensemble confidence, a confidence badge (HIGH, MODERATE or LOW), the Grad-CAM maps,
+the occlusion map and a warning when the result is unreliable.
 
-To step through the code with breakpoints instead of just running it:
-- Click in the left margin of a line to set a breakpoint
-- Go to Run and Debug (`Ctrl+Shift+D`) → "Run and Debug" → select "Python File"
-- This works for both `train.py` and `app.py`
+### Docker
 
-## Important: class order
-
-`app.py` assumes:
-```python
-CLASS_NAMES = ["glioma_tumor", "meningioma_tumor", "no_tumor", "pituitary_tumor"]
+```bash
+docker build -t neuroscan .
+docker run -p 7860:7860 neuroscan
 ```
-`train.py` prints the actual order it trained with (`Classes found: [...]`)
-— double check it matches. If not, edit `CLASS_NAMES` in `app.py`.
 
-## Notes for your report / viva
+The container uses gunicorn with a 120-second timeout, because one request runs two models,
+two Grad-CAM computations and 64 occlusion predictions.
 
-- **Frontend**: vanilla HTML/CSS/JS, no framework — `fetch()` + `FormData`
-  to send the image, renders the JSON response.
-- **Backend**: Flask, one page route (`/`) and one API route (`/predict`).
-- **Training**: transfer learning with MobileNetV2 (frozen base, ImageNet
-  weights) + a small trainable classification head — faster and less
-  data-hungry than training a CNN from scratch, which matters given the
-  dataset size.
-- **Inference flow**: uploaded image → resized to 224×224 → normalized to
-  [0,1] → same preprocessing as training → passed through the model →
-  softmax output converted to per-class percentages.
-- Be ready to explain why the preprocessing in `app.py` has to exactly match
-  `train.py` — mismatched preprocessing is a common reason a deployed model
-  underperforms compared to evaluation.
-- This is a demo tool for an academic project, not a diagnostic device —
-  worth stating explicitly if asked in viva.
+## Reused components
+
+MobileNetV2 and its ImageNet weights (Keras applications), the public datasets above, TensorFlow/Keras,
+Flask, OpenCV and NumPy. Grad-CAM and occlusion sensitivity are published methods implemented by the team.
+The experiments, scripts, ensemble, reliability layer, input gate and web application are the team's own work.

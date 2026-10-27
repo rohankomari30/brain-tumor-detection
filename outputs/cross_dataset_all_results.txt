@@ -1,0 +1,7 @@
+Cross-Dataset Accuracy (BDNeuro-MRI test set)
+
+Baseline CNN (from scratch): 76.60%
+MobileNetV2 (frozen base): 81.66%
+MobileNetV2 (fully fine-tuned): 79.08%
+CNN + CLAHE + Augmentation: 68.73%
+Ensemble (Baseline + Fine-tuned): 80.99%

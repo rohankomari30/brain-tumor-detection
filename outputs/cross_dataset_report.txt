@@ -1,0 +1,12 @@
+External Dataset Test Accuracy: 80.99%
+
+              precision    recall  f1-score   support
+
+      glioma       0.92      0.81      0.86       328
+  meningioma       0.85      0.75      0.79       221
+    no_tumor       0.52      0.97      0.68       118
+   pituitary       0.95      0.79      0.86       222
+
+    accuracy                           0.81       889
+   macro avg       0.81      0.83      0.80       889
+weighted avg       0.85      0.81      0.82       889
